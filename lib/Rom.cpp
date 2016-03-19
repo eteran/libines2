@@ -435,7 +435,7 @@ uint8_t *Rom::prg_rom() const {
 // Name: chr_rom
 //---------------------------------------------------------------------------*/
 uint8_t *Rom::chr_rom() const {
-	return chr_rom;
+	return chr_rom_;
 }
 
 }
