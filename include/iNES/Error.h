@@ -23,13 +23,45 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace iNES {
 
-class ines_error : public std::exception {};
+class ines_error : public std::exception {
+public:
+	virtual const char *what() const noexcept = 0;
+};
 
-class ines_bad_header            : public ines_error {};
-class ines_open_failed           : public ines_error {};
-class ines_read_failed           : public ines_error {};
-class ines_write_failed          : public ines_error {};
-class ines_unsupported_file_type : public ines_error {};
+class ines_bad_header : public ines_error {
+public:
+	virtual const char *what() const noexcept {
+		return "Bad Header";
+	}
+};
+
+class ines_open_failed : public ines_error {
+public:
+	virtual const char *what() const noexcept {
+		return "Failed to Open File";
+	}
+};
+
+class ines_read_failed : public ines_error {
+public:
+	virtual const char *what() const noexcept {
+		return "Failed to Read File";
+	}
+};
+
+class ines_write_failed : public ines_error {
+public:
+	virtual const char *what() const noexcept {
+		return "Failed to Write File";
+	}
+};
+
+class ines_unsupported_file_type : public ines_error {
+public:
+	virtual const char *what() const noexcept {
+		return "Unsupported File Type";
+	}
+};
 
 }
 

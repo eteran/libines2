@@ -41,6 +41,8 @@ public:
 
 public:
 	/* API access to iNES data, works with version 2.0 ROMs as well */
+	uint32_t prg_size() const;
+	uint32_t chr_size() const;
 	uint32_t prg_hash() const;
 	uint32_t chr_hash() const;
 	uint32_t rom_hash() const;
