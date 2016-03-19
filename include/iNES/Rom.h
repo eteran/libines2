@@ -50,10 +50,10 @@ public:
 	uint8_t *trainer() const;
 	
 public:
-	/* functions for loading and freeing a iNES file */
+	/* functions for writing an iNES file */
 	void write(const char *filename) const;
 
-public:
+private:
 	Header  *header_;   /* raw iNES header */
 	uint8_t *trainer_;  /* pointer to 512 byte trainer data or NULL */
 	uint8_t *prg_rom_;  /* pointer to PRG data */
