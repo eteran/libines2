@@ -48,6 +48,8 @@ public:
 	uint32_t rom_hash() const;
 	Header *header() const;
 	uint8_t *trainer() const;
+	uint8_t *prg_rom() const;
+	uint8_t *chr_rom() const;
 	
 public:
 	/* functions for writing an iNES file */
