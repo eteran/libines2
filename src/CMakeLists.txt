@@ -15,3 +15,5 @@ set_target_properties(ines_test
 	PROPERTIES
 	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
 )
+
+set_property(TARGET ines_test PROPERTY CXX_STANDARD 11)
