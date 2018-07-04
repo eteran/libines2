@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cassert>
 #include <iostream>
 #include <fstream>
+#include <cstdio>
 
 #ifdef __linux__
 #include <zlib.h>
@@ -32,9 +33,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace iNES {
 namespace {
 
-const int PrgBlockSize = 0x4000;
-const int ChrBlockSize = 0x2000;
-const int TrainerSize = 512;
+constexpr int PrgBlockSize = 0x4000;
+constexpr int ChrBlockSize = 0x2000;
+constexpr int TrainerSize = 512;
 
 /*------------------------------------------------------------------------------
 // Name: next_power
@@ -164,27 +165,27 @@ void Rom::write(const char *filename) const {
 	}
 
 	/* write the header data */
-	if(!os.write(reinterpret_cast<char *>(header_), sizeof(Header))) {
+    if(!os.write(reinterpret_cast<char *>(header_.get()), sizeof(Header))) {
 		throw ines_write_failed();
 	}		
 
 
 	if(trainer_) {
-		if(!os.write(reinterpret_cast<char *>(trainer_), TrainerSize)) {
+        if(!os.write(reinterpret_cast<char *>(trainer_.get()), TrainerSize)) {
 			throw ines_write_failed();
 		}
 	}
 
 	if(prg_size_ > 0) {
 		assert(prg_rom_);
-		if(!os.write(reinterpret_cast<char *>(prg_rom_), prg_size_)) {
+        if(!os.write(reinterpret_cast<char *>(prg_rom_.get()), prg_size_)) {
 			throw ines_write_failed();
 		}
 	}
 
 	if(chr_size_ > 0) {
 		assert(chr_rom_);
-		if(!os.write(reinterpret_cast<char *>(chr_rom_), chr_size_)) {
+        if(!os.write(reinterpret_cast<char *>(chr_rom_.get()), chr_size_)) {
 			throw ines_write_failed();
 		}
 	}
@@ -194,194 +195,133 @@ void Rom::write(const char *filename) const {
 /*-----------------------------------------------------------------------------
 // Name: Cart
 //---------------------------------------------------------------------------*/
-Rom::Rom(const char *filename) :
+Rom::Rom(const char *filename) {
 #ifdef __linux__
-	Rom(filename, FromGzip()) {
+    gzFile file = gzopen(filename, "rb");
 #else
-	Rom(filename, FromiNES()) {
+    FILE *file = fopen(filename, "rb");
 #endif
-}
+    try {
+        auto header_ptr = std::make_unique<Header>();
 
-/*-----------------------------------------------------------------------------
-// Name: Cart
-//---------------------------------------------------------------------------*/
-Rom::Rom(const char *filename, const FromGzip &) : header_(nullptr), trainer_(nullptr), prg_rom_(nullptr), chr_rom_(nullptr), prg_size_(0), chr_size_(0) {
+        /* read the header data */
 #ifdef __linux__
-	gzFile file = gzopen(filename, "rb");				
-	try {
-		Header header;
-
-		/* read the header data */
-		if(gzread(file, &header, sizeof(Header)) != sizeof(Header)) {
-			throw ines_read_failed();
-		}
-
-		if(!header.isValid()) {
-			throw ines_bad_header();
-		}
-
-		const bool has_trainer = header.trainer_present();
-
-		prg_size_ = header.prg_size() * PrgBlockSize;
-		chr_size_ = header.chr_size() * ChrBlockSize;
-
-		const size_t prg_alloc_size = next_power(prg_size_);
-		const size_t chr_alloc_size = next_power(chr_size_);
-
-		/* allocate memory for the cart */
-		header_  = new Header(header);
-		prg_rom_ = prg_size_   ? new uint8_t[prg_alloc_size] : nullptr;
-		chr_rom_ = chr_size_   ? new uint8_t[chr_alloc_size] : nullptr;
-		trainer_ = has_trainer ? new uint8_t[TrainerSize]   : nullptr;
-
-		if(has_trainer) {
-			if(gzread(file, trainer_, TrainerSize) != TrainerSize) {
-				throw ines_read_failed();
-			}
-		}
-
-		if(prg_size_ != 0) {
-			if(gzread(file, prg_rom_, prg_size_) != static_cast<int>(prg_size_)) {
-				throw ines_read_failed();
-			}
-
-			if((prg_alloc_size - prg_size_) > 0x2000 && prg_size_ >= 0x2000) {
-				/* replicate the last bank if necessary */
-				uint8_t *const last_8k = prg_rom_ + prg_size_ - 0x2000;
-				uint8_t *p = prg_rom_ + prg_size_;
-				while(p < prg_rom_ + prg_alloc_size) {
-					memcpy(p, last_8k, 0x2000);
-					p += 0x2000;
-				}
-			}
-		}
-
-		if(chr_size_ != 0) {
-			if(gzread(file, chr_rom_, chr_size_) != static_cast<int>(chr_size_)) {
-				throw ines_read_failed();
-			}
-
-			uint8_t *p = chr_rom_ + chr_size_;
-			while(p != chr_rom_ + chr_alloc_size) {
-				*p++ = 0xff;
-			}
-		}
-
-	} catch(const ines_error &) {
-		delete header_;
-		delete [] prg_rom_;
-		delete [] chr_rom_;
-		delete [] trainer_; 
-		gzclose(file);
-		throw;
-	}
-	gzclose(file);
+        if(gzread(file, header_ptr.get(), sizeof(Header)) != sizeof(Header)) {
+            throw ines_read_failed();
+        }
 #else
-	throw ines_unsupported_file_type();
-#endif	
-}
+        if(fread(&header, 1, sizeof(Header), file) != sizeof(Header)) {
+            throw ines_read_failed();
+        }
+#endif
 
-/*-----------------------------------------------------------------------------
-// Name: Cart
-//---------------------------------------------------------------------------*/
-Rom::Rom(const char *filename, const FromiNES &) : header_(nullptr), trainer_(nullptr), prg_rom_(nullptr), chr_rom_(nullptr), prg_size_(0), chr_size_(0) {
-	try {
-	
-		std::ifstream is(filename, std::ifstream::binary);
-		
-		if(!is) {
-			throw ines_open_failed();
-		}		
-	
-		Header header;
+        if(!header_ptr->isValid()) {
+            throw ines_bad_header();
+        }
 
-		/* read the header data */
-		if(!is.read(reinterpret_cast<char *>(&header), sizeof(Header))) {
-			throw ines_read_failed();
-		}
+        const bool has_trainer = header_ptr->trainer_present();
 
-		if(!header.isValid()) {
-			throw ines_bad_header();
-		}
+        const uint32_t prg_size = header_ptr->prg_size() * PrgBlockSize;
+        const uint32_t chr_size = header_ptr->chr_size() * ChrBlockSize;
 
-		const bool has_trainer = header.trainer_present();
+        const size_t prg_alloc_size = next_power(prg_size);
+        const size_t chr_alloc_size = next_power(chr_size);
 
-		prg_size_ = header.prg_size() * PrgBlockSize;
-		chr_size_ = header.chr_size() * ChrBlockSize;
+        /* allocate memory for the cart */
+        auto prg_rom_ptr = prg_size    ? std::make_unique<uint8_t[]>(prg_alloc_size) : nullptr;
+        auto chr_rom_ptr = chr_size    ? std::make_unique<uint8_t[]>(chr_alloc_size) : nullptr;
+        auto trainer_ptr = has_trainer ? std::make_unique<uint8_t[]>(TrainerSize)    : nullptr;
 
-		const size_t prg_alloc_size = next_power(prg_size_);
-		const size_t chr_alloc_size = next_power(chr_size_);
+        if(has_trainer) {
+#ifdef __linux__
+            if(gzread(file, trainer_ptr.get(), TrainerSize) != TrainerSize) {
+                throw ines_read_failed();
+            }
+#else
+            if(fread(trainer_, 1, TrainerSize, file) != TrainerSize) {
+                throw ines_read_failed();
+            }
+#endif
+        }
 
-		/* allocate memory for the cart */
-		header_  = new Header(header);
-		prg_rom_ = prg_size_   ? new uint8_t[prg_alloc_size] : nullptr;
-		chr_rom_ = chr_size_   ? new uint8_t[chr_alloc_size] : nullptr;
-		chr_rom_ = has_trainer ? new uint8_t[TrainerSize]   : nullptr;
-		
-		if(has_trainer) {
-			if(!is.read(reinterpret_cast<char *>(&trainer_), TrainerSize)) {
-				throw ines_read_failed();
-			}
-		}
+        if(prg_size != 0) {
+#ifdef __linux__
+            if(gzread(file, prg_rom_ptr.get(), prg_size) != static_cast<int>(prg_size)) {
+                throw ines_read_failed();
+            }
+#else
+            if(fread(prg_rom_ptr, 1, prg_size, file) != prg_size) {
+                throw ines_read_failed();
+            }
+#endif
 
-		if(prg_size_ != 0) {
-			if(!is.read(reinterpret_cast<char *>(&prg_rom_), prg_size_)) {
-				throw ines_read_failed();
-			}
+            if((prg_alloc_size - prg_size) > 0x2000 && prg_size >= 0x2000) {
+                /* replicate the last bank if necessary */
+                uint8_t *const last_8k = prg_rom_ptr.get() + prg_size - 0x2000;
+                uint8_t *p = prg_rom_ptr.get() + prg_size;
+                while(p < prg_rom_ptr.get() + prg_alloc_size) {
+                    memcpy(p, last_8k, 0x2000);
+                    p += 0x2000;
+                }
+            }
+        }
 
-			if((prg_alloc_size - prg_size_) > 0x2000 && prg_size_ >= 0x2000) {
-				/* replicate the last bank if necessary */
-				uint8_t *const last_8k = prg_rom_ + prg_size_ - 0x2000;
-				uint8_t *p = prg_rom_ + prg_size_;
-				while(p < prg_rom_ + prg_alloc_size) {
-					memcpy(p, last_8k, 0x2000);
-					p += 0x2000;
-				}
-			}
-		}
+        if(chr_size != 0) {
+#ifdef __linux__
+            if(gzread(file, chr_rom_ptr.get(), chr_size) != static_cast<int>(chr_size)) {
+                throw ines_read_failed();
+            }
+#else
+            if(fread(chr_rom_ptr, 1, chr_size, file) != chr_size) {
+                throw ines_read_failed();
+            }
+#endif
 
-		if(chr_size_ != 0) {
-			if(!is.read(reinterpret_cast<char *>(&chr_rom_), chr_size_)) {
-				throw ines_read_failed();
-			}
+            uint8_t *p = chr_rom_ptr.get() + chr_size;
+            while(p != chr_rom_ptr.get() + chr_alloc_size) {
+                *p++ = 0xff;
+            }
+        }
 
-			uint8_t *p = chr_rom_ + chr_size_;
-			while(p != chr_rom_ + chr_alloc_size) {
-				*p++ = 0xff;
-			}
-		}
-
-	} catch(const ines_error &) {
-		delete header_;
-		delete [] trainer_;
-		delete [] prg_rom_;
-		delete [] chr_rom_;
-		throw;
-	}
+        header_   = std::move(header_ptr);
+        prg_rom_  = std::move(prg_rom_ptr);
+        chr_rom_  = std::move(chr_rom_ptr);
+        trainer_  = std::move(trainer_ptr);
+        prg_size_ = prg_size;
+        chr_size_ = chr_size;
+    } catch(const ines_error &) {
+#ifdef __linux__
+        gzclose(file);
+#else
+        fclose(file);
+#endif
+        throw;
+    }
+#ifdef __linux__
+    gzclose(file);
+#else
+    fclose(file);
+#endif
 }
 
 /*-----------------------------------------------------------------------------
 // Name: ~Cart
 //---------------------------------------------------------------------------*/
 Rom::~Rom() {
-	delete header_;
-	delete [] trainer_;
-	delete [] prg_rom_;
-	delete [] chr_rom_;
 }
 
 /*-----------------------------------------------------------------------------
 // Name: prg_hash
 //---------------------------------------------------------------------------*/
 uint32_t Rom::prg_hash() const {
-	return ines_crc32(prg_rom_, prg_size_, 0);
+    return ines_crc32(prg_rom_.get(), prg_size_, 0);
 }
 
 /*-----------------------------------------------------------------------------
 // Name: chr_hash
 //---------------------------------------------------------------------------*/
 uint32_t Rom::chr_hash() const {
-	return ines_crc32(chr_rom_, chr_size_, 0);
+    return ines_crc32(chr_rom_.get(), chr_size_, 0);
 }
 
 /*-----------------------------------------------------------------------------
@@ -389,9 +329,9 @@ uint32_t Rom::chr_hash() const {
 //---------------------------------------------------------------------------*/
 uint32_t Rom::rom_hash() const {
 	
-	const uint32_t hash1 = trainer_ ? ines_crc32(trainer_, TrainerSize, 0)  : 0;
-	const uint32_t hash2 = prg_rom_ ? ines_crc32(prg_rom_, prg_size_, hash1) : hash1;
-	const uint32_t hash3 = chr_rom_ ? ines_crc32(chr_rom_, chr_size_, hash2) : hash2;
+    const uint32_t hash1 = trainer_ ? ines_crc32(trainer_.get(), TrainerSize, 0)  : 0;
+    const uint32_t hash2 = prg_rom_ ? ines_crc32(prg_rom_.get(), prg_size_, hash1) : hash1;
+    const uint32_t hash3 = chr_rom_ ? ines_crc32(chr_rom_.get(), chr_size_, hash2) : hash2;
 	
 	return hash3;
 }
@@ -400,14 +340,14 @@ uint32_t Rom::rom_hash() const {
 // Name: header
 //---------------------------------------------------------------------------*/
 Header *Rom::header() const {
-	return header_;
+    return header_.get();
 }
 
 /*-----------------------------------------------------------------------------
 // Name: trainer
 //---------------------------------------------------------------------------*/
 uint8_t *Rom::trainer() const {
-	return trainer_;
+    return trainer_.get();
 }
 
 /*-----------------------------------------------------------------------------
@@ -428,14 +368,14 @@ uint32_t Rom::chr_size() const {
 // Name: prg_rom
 //---------------------------------------------------------------------------*/
 uint8_t *Rom::prg_rom() const {
-	return prg_rom_;
+    return prg_rom_.get();
 }
 
 /*-----------------------------------------------------------------------------
 // Name: chr_rom
 //---------------------------------------------------------------------------*/
 uint8_t *Rom::chr_rom() const {
-	return chr_rom_;
+    return chr_rom_.get();
 }
 
 }

@@ -20,23 +20,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define INES_ROM_20160318_H_
 
 #include "iNES/Header.h"
+#include <memory>
 
 namespace iNES {
 
 /* abstract description of a iNES file */
 class Rom {
 public:
-	struct FromGzip {};
-	struct FromiNES {};
-
-public:
 	Rom(const char *filename);
-	Rom(const char *filename, const FromGzip &);
-	Rom(const char *filename, const FromiNES &);
-	Rom(const Rom &) = delete;
+    Rom(const Rom &)            = delete;
 	Rom& operator=(const Rom &) = delete;
-	Rom(Rom &&) = default;
-	Rom& operator=(Rom &&) = default;
+    Rom(Rom &&)                 = default;
+    Rom& operator=(Rom &&)      = default;
 	~Rom();
 
 public:
@@ -56,12 +51,12 @@ public:
 	void write(const char *filename) const;
 
 private:
-	Header  *header_;   /* raw iNES header */
-	uint8_t *trainer_;  /* pointer to 512 byte trainer data or NULL */
-	uint8_t *prg_rom_;  /* pointer to PRG data */
-	uint8_t *chr_rom_;  /* pointer to CHR data or NULL */
-	uint32_t prg_size_; /* size of PRG data */
-	uint32_t chr_size_; /* size of CHR data or 0 */
+    std::unique_ptr<Header> header_;      /* raw iNES header */
+    std::unique_ptr<uint8_t[]> trainer_;  /* pointer to 512 byte trainer data or NULL */
+    std::unique_ptr<uint8_t[]> prg_rom_;  /* pointer to PRG data */
+    std::unique_ptr<uint8_t[]> chr_rom_;  /* pointer to CHR data or NULL */
+    uint32_t prg_size_ = 0;               /* size of PRG data */
+    uint32_t chr_size_ = 0;               /* size of CHR data or 0 */
 };
 
 }

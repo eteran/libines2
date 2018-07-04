@@ -21,5 +21,5 @@ set_target_properties(ines2
 	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
 )
 
-set_property(TARGET ines2 PROPERTY CXX_STANDARD 11)
+set_property(TARGET ines2 PROPERTY CXX_STANDARD 14)
 set_property(TARGET ines2 PROPERTY CXX_EXTENSIONS OFF)
