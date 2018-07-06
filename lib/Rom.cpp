@@ -40,7 +40,7 @@ constexpr int TrainerSize = 512;
 /*------------------------------------------------------------------------------
 // Name: next_power
 //----------------------------------------------------------------------------*/
-size_t next_power(size_t size) {
+uint32_t next_power(uint32_t size) {
 
 	/* returns 1 less than closest fitting power of 2
 	 * is this number not a power of two or 0?
@@ -210,7 +210,7 @@ Rom::Rom(const char *filename) {
             throw ines_read_failed();
         }
 #else
-        if(fread(&header, 1, sizeof(Header), file) != sizeof(Header)) {
+        if(fread(header_ptr.get(), 1, sizeof(Header), file) != sizeof(Header)) {
             throw ines_read_failed();
         }
 #endif
@@ -224,8 +224,8 @@ Rom::Rom(const char *filename) {
         const uint32_t prg_size = header_ptr->prg_size() * PrgBlockSize;
         const uint32_t chr_size = header_ptr->chr_size() * ChrBlockSize;
 
-        const size_t prg_alloc_size = next_power(prg_size);
-        const size_t chr_alloc_size = next_power(chr_size);
+        const uint32_t prg_alloc_size = next_power(prg_size);
+        const uint32_t chr_alloc_size = next_power(chr_size);
 
         /* allocate memory for the cart */
         auto prg_rom_ptr = prg_size    ? std::make_unique<uint8_t[]>(prg_alloc_size) : nullptr;
@@ -238,7 +238,7 @@ Rom::Rom(const char *filename) {
                 throw ines_read_failed();
             }
 #else
-            if(fread(trainer_, 1, TrainerSize, file) != TrainerSize) {
+            if(fread(trainer_ptr.get(), 1, TrainerSize, file) != TrainerSize) {
                 throw ines_read_failed();
             }
 #endif
@@ -250,7 +250,7 @@ Rom::Rom(const char *filename) {
                 throw ines_read_failed();
             }
 #else
-            if(fread(prg_rom_ptr, 1, prg_size, file) != prg_size) {
+            if(fread(prg_rom_ptr.get(), 1, prg_size, file) != prg_size) {
                 throw ines_read_failed();
             }
 #endif
@@ -272,7 +272,7 @@ Rom::Rom(const char *filename) {
                 throw ines_read_failed();
             }
 #else
-            if(fread(chr_rom_ptr, 1, chr_size, file) != chr_size) {
+            if(fread(chr_rom_ptr.get(), 1, chr_size, file) != chr_size) {
                 throw ines_read_failed();
             }
 #endif
