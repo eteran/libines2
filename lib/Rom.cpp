@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <fstream>
 #include <cstdio>
 
-#ifdef __linux__
+#ifndef ZLIB_NOT_FOUND
 #include <zlib.h>
 #endif
 
@@ -196,7 +196,7 @@ void Rom::write(const char *filename) const {
 // Name: Cart
 //---------------------------------------------------------------------------*/
 Rom::Rom(const char *filename) {
-#ifdef __linux__
+#ifndef ZLIB_NOT_FOUND
     gzFile file = gzopen(filename, "rb");
 #else
     FILE *file = fopen(filename, "rb");
@@ -205,7 +205,7 @@ Rom::Rom(const char *filename) {
         auto header_ptr = std::make_unique<Header>();
 
         /* read the header data */
-#ifdef __linux__
+#ifndef ZLIB_NOT_FOUND
         if(gzread(file, header_ptr.get(), sizeof(Header)) != sizeof(Header)) {
             throw ines_read_failed();
         }
@@ -233,7 +233,7 @@ Rom::Rom(const char *filename) {
         auto trainer_ptr = has_trainer ? std::make_unique<uint8_t[]>(TrainerSize)    : nullptr;
 
         if(has_trainer) {
-#ifdef __linux__
+#ifndef ZLIB_NOT_FOUND
             if(gzread(file, trainer_ptr.get(), TrainerSize) != TrainerSize) {
                 throw ines_read_failed();
             }
@@ -245,7 +245,7 @@ Rom::Rom(const char *filename) {
         }
 
         if(prg_size != 0) {
-#ifdef __linux__
+#ifndef ZLIB_NOT_FOUND
             if(gzread(file, prg_rom_ptr.get(), prg_size) != static_cast<int>(prg_size)) {
                 throw ines_read_failed();
             }
@@ -267,7 +267,7 @@ Rom::Rom(const char *filename) {
         }
 
         if(chr_size != 0) {
-#ifdef __linux__
+#ifndef ZLIB_NOT_FOUND
             if(gzread(file, chr_rom_ptr.get(), chr_size) != static_cast<int>(chr_size)) {
                 throw ines_read_failed();
             }
@@ -290,14 +290,14 @@ Rom::Rom(const char *filename) {
         prg_size_ = prg_size;
         chr_size_ = chr_size;
     } catch(const ines_error &) {
-#ifdef __linux__
+#ifndef ZLIB_NOT_FOUND
         gzclose(file);
 #else
         fclose(file);
 #endif
         throw;
     }
-#ifdef __linux__
+#ifndef ZLIB_NOT_FOUND
     gzclose(file);
 #else
     fclose(file);
