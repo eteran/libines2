@@ -2,33 +2,29 @@ cmake_minimum_required(VERSION 3.0)
 
 find_package(ZLIB)
 
-if(NOT ZLIB_FOUND)
-	set(ZLIB_LIBRARIES "")
-	set(ZLIB_INCLUDES "")
-endif()
-
-add_library(ines2 
+add_library(iNES2 
 	Rom.cpp
-	Header.cpp)
+	Header.cpp
+	include/iNES/Rom.h
+	include/iNES/Header.h
+	include/iNES/Error.h
+)
 	
-target_link_libraries(ines2 LINK_PUBLIC
-	${ZLIB_LIBRARIES}
-)
 
-target_include_directories(ines2 PUBLIC
-	${PROJECT_SOURCE_DIR}/include
-	${CMAKE_CURRENT_SOURCE_DIR}/../include
-	${ZLIB_INCLUDES}
+target_include_directories(iNES2
+	PUBLIC include
 )
-
-set_target_properties(ines2
-	PROPERTIES
-	RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
-)
-
 
 if(NOT ZLIB_FOUND)
-	target_compile_definitions(ines2 PUBLIC -DZLIB_NOT_FOUND)
+	target_compile_definitions(iNES2 
+		PUBLIC -DZLIB_NOT_FOUND
+	)
+else()
+	target_link_libraries(iNES2
+		PUBLIC ZLIB::ZLIB
+	)
 endif()
-set_property(TARGET ines2 PROPERTY CXX_STANDARD 14)
-set_property(TARGET ines2 PROPERTY CXX_EXTENSIONS OFF)
+
+
+set_property(TARGET iNES2 PROPERTY CXX_STANDARD 14)
+set_property(TARGET iNES2 PROPERTY CXX_EXTENSIONS OFF)
