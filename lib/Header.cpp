@@ -26,10 +26,10 @@ namespace iNES {
 namespace {
 
 /* Flags in Header.ctrl1 */
-const int INES_MIRROR  = 0x01;
-const int INES_SRAM    = 0x02;
-const int INES_TRAINER = 0x04;
-const int INES_4SCREEN = 0x08;
+constexpr int INES_MIRROR  = 0x01;
+constexpr int INES_SRAM    = 0x02;
+constexpr int INES_TRAINER = 0x04;
+constexpr int INES_4SCREEN = 0x08;
 
 }
 
