@@ -32,7 +32,7 @@ public:
 	Rom& operator=(const Rom &) = delete;
     Rom(Rom &&)                 = default;
     Rom& operator=(Rom &&)      = default;
-	~Rom();
+	~Rom()                      = default;
 
 public:
 	/* API access to iNES data, works with version 2.0 ROMs as well */
