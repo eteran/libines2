@@ -127,6 +127,8 @@ Display Header::display() const {
 		case 0x01: return Display::PAL;
 		case 0x02: return Display::BOTH;
 		case 0x03: return Display::BOTH;
+		default:
+			return Display::BOTH;
 		}
 	default:
 		return Display::BOTH;
