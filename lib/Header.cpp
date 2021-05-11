@@ -44,12 +44,12 @@ bool Header::isValid() const {
 // isDirty
 //---------------------------------------------------------------------------*/
 bool Header::isDirty() const {
-	if(version() != 2) {
-		if(extended_.ines1.reserved_2 != 0 || extended_.ines1.reserved_1 != 0) {
+	if (version() != 2) {
+		if (extended_.ines1.reserved_2 != 0 || extended_.ines1.reserved_1 != 0) {
 			return true;
 		}
 	}
-	
+
 	return false;
 }
 
@@ -65,7 +65,7 @@ int Header::version() const {
 //---------------------------------------------------------------------------*/
 uint32_t Header::mapper() const {
 
-	switch(version()) {
+	switch (version()) {
 	case 2:
 		return (((static_cast<uint32_t>(extended_.ines2.byte8) & 0x0f)) << 8) | (ctrl1_ >> 4) | (ctrl2_ & 0xf0);
 	default:
@@ -78,7 +78,7 @@ uint32_t Header::mapper() const {
 //---------------------------------------------------------------------------*/
 uint32_t Header::submapper() const {
 
-	switch(version()) {
+	switch (version()) {
 	case 2:
 		return (extended_.ines2.byte8 & 0xf0) >> 4;
 	default:
@@ -90,23 +90,36 @@ uint32_t Header::submapper() const {
 // Name: ppu
 //---------------------------------------------------------------------------*/
 Ppu Header::ppu() const {
-	
-	switch(version()) {
+
+	switch (version()) {
 	case 2:
-		switch(extended_.ines2.byte13 & 0x0f) {
-		case 0x00: return Ppu::RP2C03B;
-		case 0x01: return Ppu::RP2C03G;
-		case 0x02: return Ppu::RP2C04_0001;
-		case 0x03: return Ppu::RP2C04_0002;
-		case 0x04: return Ppu::RP2C04_0003;
-		case 0x05: return Ppu::RP2C04_0004;
-		case 0x06: return Ppu::RC2C03B;
-		case 0x07: return Ppu::RC2C03C;
-		case 0x08: return Ppu::RC2C05_01;
-		case 0x09: return Ppu::RC2C05_02;
-		case 0x0a: return Ppu::RC2C05_03;
-		case 0x0b: return Ppu::RC2C05_04;
-		case 0x0c: return Ppu::RC2C05_05;
+		switch (extended_.ines2.byte13 & 0x0f) {
+		case 0x00:
+			return Ppu::RP2C03B;
+		case 0x01:
+			return Ppu::RP2C03G;
+		case 0x02:
+			return Ppu::RP2C04_0001;
+		case 0x03:
+			return Ppu::RP2C04_0002;
+		case 0x04:
+			return Ppu::RP2C04_0003;
+		case 0x05:
+			return Ppu::RP2C04_0004;
+		case 0x06:
+			return Ppu::RC2C03B;
+		case 0x07:
+			return Ppu::RC2C03C;
+		case 0x08:
+			return Ppu::RC2C05_01;
+		case 0x09:
+			return Ppu::RC2C05_02;
+		case 0x0a:
+			return Ppu::RC2C05_03;
+		case 0x0b:
+			return Ppu::RC2C05_04;
+		case 0x0c:
+			return Ppu::RC2C05_05;
 		default:
 			return Ppu::UNKNOWN;
 		}
@@ -119,14 +132,18 @@ Ppu Header::ppu() const {
 // Name: display
 //---------------------------------------------------------------------------*/
 Display Header::display() const {
-	
-	switch(version()) {
+
+	switch (version()) {
 	case 2:
-		switch(extended_.ines2.byte12 & 0x03) {
-		case 0x00: return Display::NTSC;
-		case 0x01: return Display::PAL;
-		case 0x02: return Display::BOTH;
-		case 0x03: return Display::BOTH;
+		switch (extended_.ines2.byte12 & 0x03) {
+		case 0x00:
+			return Display::NTSC;
+		case 0x01:
+			return Display::PAL;
+		case 0x02:
+			return Display::BOTH;
+		case 0x03:
+			return Display::BOTH;
 		default:
 			return Display::BOTH;
 		}
@@ -140,9 +157,11 @@ Display Header::display() const {
 //---------------------------------------------------------------------------*/
 System Header::system() const {
 
-	switch(ctrl2_ & 0x03) {
-	case 0x01: return System::VS;
-	case 0x02: return System::P10;
+	switch (ctrl2_ & 0x03) {
+	case 0x01:
+		return System::VS;
+	case 0x02:
+		return System::P10;
 	default:
 		return System::NES;
 	}
@@ -153,7 +172,7 @@ System Header::system() const {
 //---------------------------------------------------------------------------*/
 Mirroring Header::mirroring() const {
 
-	switch(ctrl1_ & 0x09) {
+	switch (ctrl1_ & 0x09) {
 	case 0x09:
 	case 0x08:
 		return Mirroring::FOUR_SCREEN;
@@ -164,7 +183,6 @@ Mirroring Header::mirroring() const {
 		return Mirroring::HORIZONTAL;
 	}
 }
-
 
 /*-----------------------------------------------------------------------------
 // Name: trainer_present
@@ -178,7 +196,7 @@ bool Header::trainer_present() const {
 //---------------------------------------------------------------------------*/
 uint32_t Header::prg_size() const {
 
-	switch(version()) {
+	switch (version()) {
 	case 2:
 		return prg_size_ | ((static_cast<uint32_t>(extended_.ines2.byte9) & 0x0f) << 8);
 	default:
@@ -191,7 +209,7 @@ uint32_t Header::prg_size() const {
 //---------------------------------------------------------------------------*/
 uint32_t Header::chr_size() const {
 
-	switch(version()) {
+	switch (version()) {
 	case 2:
 		return chr_size_ | ((static_cast<uint32_t>(extended_.ines2.byte9) & 0xf0) << 4);
 	default:

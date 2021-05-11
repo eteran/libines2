@@ -28,11 +28,11 @@ namespace iNES {
 class Rom {
 public:
 	Rom(const char *filename);
-    Rom(const Rom &)            = delete;
-	Rom& operator=(const Rom &) = delete;
-    Rom(Rom &&)                 = default;
-    Rom& operator=(Rom &&)      = default;
-	~Rom()                      = default;
+	Rom(const Rom &) = delete;
+	Rom &operator=(const Rom &) = delete;
+	Rom(Rom &&)                 = default;
+	Rom &operator=(Rom &&) = default;
+	~Rom()                 = default;
 
 public:
 	/* API access to iNES data, works with version 2.0 ROMs as well */
@@ -45,21 +45,20 @@ public:
 	uint8_t *trainer() const;
 	uint8_t *prg_rom() const;
 	uint8_t *chr_rom() const;
-	
+
 public:
 	/* functions for writing an iNES file */
 	void write(const char *filename) const;
 
 private:
-    std::unique_ptr<Header> header_;      /* raw iNES header */
-    std::unique_ptr<uint8_t[]> trainer_;  /* pointer to 512 byte trainer data or NULL */
-    std::unique_ptr<uint8_t[]> prg_rom_;  /* pointer to PRG data */
-    std::unique_ptr<uint8_t[]> chr_rom_;  /* pointer to CHR data or NULL */
-    uint32_t prg_size_ = 0;               /* size of PRG data */
-    uint32_t chr_size_ = 0;               /* size of CHR data or 0 */
+	std::unique_ptr<Header> header_;     /* raw iNES header */
+	std::unique_ptr<uint8_t[]> trainer_; /* pointer to 512 byte trainer data or NULL */
+	std::unique_ptr<uint8_t[]> prg_rom_; /* pointer to PRG data */
+	std::unique_ptr<uint8_t[]> chr_rom_; /* pointer to CHR data or NULL */
+	uint32_t prg_size_ = 0;              /* size of PRG data */
+	uint32_t chr_size_ = 0;              /* size of CHR data or 0 */
 };
 
 }
 
 #endif
-

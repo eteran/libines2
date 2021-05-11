@@ -67,7 +67,7 @@ public:
 	int version() const;
 	bool isValid() const;
 	bool isDirty() const;
-	
+
 public:
 	uint32_t mapper() const;    /* iNES mapper number */
 	uint32_t submapper() const; /* iNES sub-mapper number */
@@ -80,11 +80,11 @@ public:
 	uint32_t chr_size() const;
 
 public:
-	char    ines_signature_[4]; /* 0x1A53454E (NES file signature) */
-	uint8_t prg_size_;          /* in 16k banks */
-	uint8_t chr_size_;          /* in 8k banks */
-	uint8_t ctrl1_;             /* %NNNN.FTBM */
-	uint8_t ctrl2_;             /* %NNNN.SSPV (version 2.0 when SS = 10b*/
+	char ines_signature_[4]; /* 0x1A53454E (NES file signature) */
+	uint8_t prg_size_;       /* in 16k banks */
+	uint8_t chr_size_;       /* in 8k banks */
+	uint8_t ctrl1_;          /* %NNNN.FTBM */
+	uint8_t ctrl2_;          /* %NNNN.SSPV (version 2.0 when SS = 10b*/
 
 	/* in iNES 2.0, these mean something, otherwise, should be 0 */
 	union {
@@ -109,4 +109,3 @@ public:
 }
 
 #endif
-
