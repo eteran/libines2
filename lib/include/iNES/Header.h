@@ -100,8 +100,7 @@ public:
 		} ines2;
 
 		struct ines1_t {
-			uint32_t reserved_1;
-			uint32_t reserved_2;
+			uint64_t reserved;
 		} ines1;
 	} extended_;
 };

@@ -45,7 +45,7 @@ bool Header::isValid() const {
 //---------------------------------------------------------------------------*/
 bool Header::isDirty() const {
 	if (version() != 2) {
-		if (extended_.ines1.reserved_2 != 0 || extended_.ines1.reserved_1 != 0) {
+		if (extended_.ines1.reserved != 0) {
 			return true;
 		}
 	}
