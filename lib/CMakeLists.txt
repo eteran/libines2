@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.15)
 
 find_package(ZLIB)
 
@@ -10,9 +10,8 @@ add_library(iNES2
 	include/iNES/Error.h
 )
 	
-
 target_include_directories(iNES2
-	PUBLIC include
+        PUBLIC include
 )
 
 if(NOT ZLIB_FOUND)
@@ -25,6 +24,7 @@ else()
 	)
 endif()
 
-
-set_property(TARGET iNES2 PROPERTY CXX_STANDARD 17)
-set_property(TARGET iNES2 PROPERTY CXX_EXTENSIONS OFF)
+set_target_properties(iNES2 PROPERTIES
+    CXX_STANDARD 17
+    CXX_EXTENSIONS OFF
+)
